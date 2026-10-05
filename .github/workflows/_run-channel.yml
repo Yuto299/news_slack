@@ -34,10 +34,6 @@ jobs:
     timeout-minutes: 60
     permissions:
       contents: write  # 投稿内容を archive/ にコミットするため
-    # 履歴の保存が前後の実行と競合しないよう、チャンネルごとに同時実行は 1 つ
-    concurrency:
-      group: bot-${{ inputs.channel }}
-      cancel-in-progress: false
     env:
       HISTORY_FILE: ${{ inputs.history_file || format('history/{0}.json', inputs.channel) }}
       CACHE_PREFIX: ${{ inputs.cache_prefix || format('history-{0}', inputs.channel) }}

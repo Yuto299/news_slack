@@ -17,6 +17,13 @@ on:
         type: boolean
         default: false
 
+# 履歴の保存が前後の実行と競合しないよう、チャンネルごとに同時実行は 1 つ。
+# GitHub の起動が遅れて本番と予備の起動が重なると、待機中の実行は GitHub により自動でキャンセルされる
+# （先に動いている実行が投稿するので問題なし）。ここに書くと「失敗」ではなく「キャンセル」と表示される。
+concurrency:
+  group: bot-subsidies
+  cancel-in-progress: false
+
 jobs:
   run:
     permissions:
