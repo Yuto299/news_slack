@@ -100,7 +100,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add archive
           git diff --cached --quiet && exit 0
-          git commit -m "archive: ${{ inputs.channel }} $(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M')"
+          # 作成者はリポジトリのオーナー（GitHub のプロフィールの活動に数えられる）、コミットしたのは github-actions として記録
+          git commit --author="Yuto299 <177550579+Yuto299@users.noreply.github.com>" \
+            -m "archive: ${{ inputs.channel }} $(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M')"
           # 他のチャンネルと同時にコミットすることがあるので、取り込み直して再試行する
           for i in 1 2 3 4 5; do
             git pull --rebase -q origin "${GITHUB_REF_NAME}" && git push -q origin "HEAD:${GITHUB_REF_NAME}" && exit 0
