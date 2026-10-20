@@ -79,6 +79,7 @@ class Context:
     slot: Slot
     history: list[dict]
     items: list[Item] = field(default_factory=list)
+    slot_dt: datetime | None = None  # この回の本来の配信日時（遅れて実行しても見出しの日付はこちら）
 
     @property
     def seen_urls(self) -> set[str]:
@@ -97,7 +98,7 @@ class Context:
         ]
 
     def header(self) -> dict:
-        n = self.now
+        n = self.slot_dt or self.now
         text = f"{self.slot.label}　{n:%-m/%-d}({WEEKDAYS_JA[n.weekday()]})"
         return {"type": "header", "text": {"type": "plain_text", "text": text}}
 
@@ -398,6 +399,9 @@ def run(channel: ModuleType, dry_run: bool) -> int:
             print("[info] 配信枠に当たらない起動のためスキップ", file=sys.stderr)
             return 0
         slot, slot_dt = detected
+    if not scheduled and slot_dt - now > timedelta(hours=1):
+        # 手動実行で、配信時刻がまだ先の枠は「前日の回」として扱う（例: 深夜に前日の夜の回を流し直す）
+        slot_dt -= timedelta(days=1)
     if scheduled and now - slot_dt > MAX_DELAY:
         print(f"[warn] 予定（{slot_dt:%m/%d %H:%M}）から 12 時間以上遅れて起動したためスキップ", file=sys.stderr)
         return 0
@@ -412,7 +416,7 @@ def run(channel: ModuleType, dry_run: bool) -> int:
         return 0
     print(f"[info] {channel.NAME} / {slot.name} 枠 / 履歴 {len(history)} 件", file=sys.stderr)
 
-    ctx = Context(now=now, slot=slot, history=history)
+    ctx = Context(now=now, slot=slot, history=history, slot_dt=slot_dt)
     ctx.items = channel.collect(ctx)
     print(f"[info] 候補 {len(ctx.items)} 件", file=sys.stderr)
 
